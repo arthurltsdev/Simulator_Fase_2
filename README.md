@@ -1,2 +1,1 @@
-# Simulator_Fase_2
- Entrega da fase 2 do projeto de Bruno
+Para iniciar o projeto, basta rodar a main que fica na raiz do projeto!
