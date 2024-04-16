@@ -13,7 +13,7 @@ class MemoryManager:
         frames = self.get_frames(process)
         if not frames:
             if self.gui:
-                self.gui.add_log("Page Fault: Não há memória disponível para alocar o processo.")
+                self.gui.add_log("***Page Fault*** Processo não alocado por motivo de:  Não há memória suficiente disponível para alocar o processo.")
             return False
         for frame in frames:
             start_index = frame.get_page_num() * self.pageSize

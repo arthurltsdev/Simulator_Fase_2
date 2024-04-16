@@ -55,7 +55,8 @@ class MemorySimulatorGUI:
             if added:
                 showinfo("Successo!", f"Processo {process.id} adicionado com sucesso.")
             else:
-                self.add_log("Falha ao adicionar processo: Memória Insuficiente ou Page Fault")
+                #self.add_log("Falha ao adicionar processo: Memória Insuficiente ou Page Fault")
+                pass
             self.update_memory_display()
         except ValueError:
             showinfo("Erro", "Tamanho do processo inválido.")
