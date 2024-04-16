@@ -1,35 +1,45 @@
-from so.memory.strategy import Strategy
-from so.so_pack import process
+from so.memory.frame_memory import FrameMemory
+
 class MemoryManager:
-    def __init__(self, memory_size: int = 128, default_strategy=Strategy.PAGING):
-        self.strategy = default_strategy
-        self.physicalMemory = [None] * 128  # Simulando a memória física com 128 posições
-        self.logicalMemory = {}  # Dicionário para simular a Hashtable do Java
+    def __init__(self, memorySize, pageSize):
+        self.pageSize = pageSize
+        self.memorySize = memorySize
+        self.pages = (self.memorySize + self.pageSize - 1) // self.pageSize  # Ensure proper rounding up
+        self.physicalMemory = [[None] * self.pageSize for _ in range(self.pages)]
+        self.logicalMemory = {}
 
-    def add_process_to_logical_memory(self, process_id, frame_memory):
-        if process_id not in self.logicalMemory:
-            self.logicalMemory[process_id] = []
-        self.logicalMemory[process_id].append(frame_memory)
+    def write_using_paging(self, process):
+        frames = self.get_frames(process)
+        total_units_to_allocate = process.sizeInMemory
+        for frame in frames:
+            if total_units_to_allocate <= 0:
+                break
+            units_to_allocate = min(self.pageSize, total_units_to_allocate)
+            start_index = frame.get_page_num() * self.pageSize
+            end_index = start_index + units_to_allocate
+            for j in range(start_index, end_index):
+                page_index = j // self.pageSize
+                sub_index = j % self.pageSize
+                self.physicalMemory[page_index][sub_index] = process.id
+            total_units_to_allocate -= units_to_allocate
+        self.logicalMemory[process.id] = frames
 
-    def set_strategy(self, strategy):
-        self.strategy = strategy
+    def get_frames(self, process):
+        frames = []
+        actuallyProcessSize = 0
+        for frame in range(self.pages):
+            if self.physicalMemory[frame][0] is None:
+                frames.append(FrameMemory(frame, self.pageSize))
+                actuallyProcessSize += self.pageSize
+                if actuallyProcessSize >= process.sizeInMemory:
+                    break
+        return frames
 
-    def allocate(self, process_id):
-        if self.strategy == Strategy.FIRST_FIT:
-            return self.allocate_using_first_fit(process_id)
-        elif self.strategy == Strategy.BEST_FIT:
-            return self.allocate_using_best_fit(process_id)
-        elif self.strategy == Strategy.WORST_FIT:
-            return self.allocate_using_worst_fit(process_id)
-        elif self.strategy == Strategy.PAGING:
-            return self.allocate_using_paging(process_id)
-        return False
-
-    def allocate_using_paging(process_id):
-
-    def delete(process_id):
-        for
-
-
-
-
+    def delete(self, process):
+        frames = self.logicalMemory.get(process.id, [])
+        for frame in frames:
+            start_index = frame.get_page_num()
+            end_index = start_index + self.pageSize
+            for j in range(start_index, end_index):
+                self.physicalMemory[j // self.pageSize][j % self.pageSize] = None
+        del self.logicalMemory[process.id]

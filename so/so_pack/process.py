@@ -1,23 +1,17 @@
+from so.so_pack.subprocess import SubProcess
+
 
 class Process:
-    process_count = 0
-    def __init__(self, size_in_memory):
-        Process.process_count += 1
-        self.id= f"P{Process.process_count}"
-        self.size_in_memory = size_in_memory  # O tamanho é agora passado como um argumento
-        self.address_in_memory = None  # Alocado pelo MemoryManager ao alocar o processo
+    count = 0
 
-    def get_id(self):
-        return self.id
+    def __init__(self, size):
+        Process.count += 1
+        self.id = f"P{Process.count}"
+        self.sizeInMemory = size
+        self.subProcesses = []
 
-    def get_size_in_memory(self):
-        return self.size_in_memory
-
-    def set_size_in_memory(self, size):
-        self.size_in_memory = size
-
-    def get_address_in_memory(self):
-        return self.address_in_memory
-
-    def set_address_in_memory(self, address):
-        self.address_in_memory = address
+    def get_sub_processes(self):
+        if not self.subProcesses:
+            for i in range(self.sizeInMemory):
+                self.subProcesses.append(SubProcess(self.id, 7))
+        return self.subProcesses

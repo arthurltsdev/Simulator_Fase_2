@@ -1,7 +1,7 @@
 class FrameMemory:
-    def __init__(self, pageNum, displacement):
+    def __init__(self, pageNum, offset):
         self.pageNum = pageNum
-        self.displacement = displacement
+        self.offset = offset
 
     def get_page_num(self):
         return self.pageNum
@@ -9,8 +9,8 @@ class FrameMemory:
     def set_page_num(self, pageNum):
         self.pageNum = pageNum
 
-    def get_displacement(self):
-        return self.displacement
+    def get_offset(self):
+        return self.offset
 
-    def set_displacement(self, displacement):
-        self.displacement = displacement
+    def set_offset(self, offset):
+        self.offset = offset
