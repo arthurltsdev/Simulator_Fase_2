@@ -7,12 +7,13 @@ class MemorySimulatorGUI:
     def __init__(self, master):
         self.master = master
         self.master.title("Simulador de memória - Paginação")
-        self.memory_manager = MemoryManager(256, 4, self)  # Memória de 256kb, página de 4kb
+        # Memória de 256kb, página de 4kb
+        self.memory_manager = MemoryManager(256, 4, self)
 
         self.init_process_size_input()
         self.init_process_buttons()
         self.init_memory_display()
-        self.init_log_display()  # Inicializar a exibição de logs
+        self.init_log_display()
 
     def init_log_display(self):
         self.log_frame = Frame(self.master)
@@ -34,7 +35,7 @@ class MemorySimulatorGUI:
 
     def add_log(self, message):
         self.log_list.insert(END, message)
-        self.log_list.see(END)  # Auto-scroll para o log mais recente
+        self.log_list.see(END)
 
     def init_process_size_input(self):
         self.process_size_var = StringVar()
@@ -56,6 +57,7 @@ class MemorySimulatorGUI:
                 showinfo("Successo!", f"Processo {process.id} adicionado com sucesso.")
             else:
                 #self.add_log("Falha ao adicionar processo: Memória Insuficiente ou Page Fault")
+                #O log foi adicionado na função write_using_paging do arquivo memory_manager.py
                 pass
             self.update_memory_display()
         except ValueError:
@@ -76,7 +78,8 @@ class MemorySimulatorGUI:
         self.memory_frame = Frame(self.master)
         self.memory_frame.pack()
         self.memory_labels = []
-        columns = 16  # Como são 64 páginas, serão divididas em 16 colunas e 4 linhas para melhor visualização.
+        # Para uma memória de 256kb e páginas de 4kb, o total de 64 páginas serão divididas 4 linhas de 16 colunas para melhor visualização.
+        columns = 16
         for i in range(self.memory_manager.pages):
             row = i // columns
             column = i % columns

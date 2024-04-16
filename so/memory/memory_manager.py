@@ -13,7 +13,7 @@ class MemoryManager:
         frames = self.get_frames(process)
         if not frames:
             if self.gui:
-                self.gui.add_log("***Page Fault*** Processo não alocado por motivo de:  Não há memória suficiente disponível para alocar o processo.")
+                self.gui.add_log("Page Fault: Não há memória disponível para alocar o processo.")
             return False
         for frame in frames:
             start_index = frame.get_page_num() * self.pageSize
@@ -23,9 +23,16 @@ class MemoryManager:
                 sub_index = j % self.pageSize
                 self.physicalMemory[page_index][sub_index] = process.id
         self.logicalMemory[process.id] = frames
+        # Calcula a memória restante para printar o log a cada novo processo adicionado
+        remaining_pages = sum(1 for frame in self.physicalMemory if frame[0] is None)
+        remaining_memory_kb = remaining_pages * self.pageSize
+        if self.gui:
+            self.gui.add_log(f"Espaço restante em memória: {remaining_memory_kb} kb.")
+        # Verifica se a memória está completamente cheia e loga se estiver
         if all(frame[0] is not None for frame in self.physicalMemory):
             if self.gui:
                 self.gui.add_log("Memória completamente cheia.")
+
         return True
 
     def get_frames(self, process):
@@ -38,7 +45,8 @@ class MemoryManager:
                 if actuallyProcessSize >= process.sizeInMemory:
                     return frames
         if actuallyProcessSize < process.sizeInMemory:
-            return []  # Retorna lista vazia se não houver espaço suficiente
+            # Retorna lista vazia se não houver espaço suficiente
+            return []
         return frames
 
     def delete(self, process):
@@ -61,5 +69,5 @@ class MemoryManager:
         self.physicalMemory = [[None] * self.pageSize for _ in range(self.pages)]
         self.logicalMemory = {}
         if self.gui:
-            self.gui.add_log("Memória limpa completamente.")
+            self.gui.add_log("Todos os processos foram removidos.")
 
