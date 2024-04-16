@@ -8,7 +8,6 @@ class MemorySimulatorGUI:
         self.master = master
         self.master.title("Simulador de memória - Paginação")
         self.memory_manager = MemoryManager(256, 4, self)  # Memória de 256kb, página de 4kb
-        self.memory_manager.gui = self  # Passa a referência da GUI para o MemoryManager
 
         self.init_process_size_input()
         self.init_process_buttons()
@@ -23,6 +22,15 @@ class MemorySimulatorGUI:
         scrollbar.config(command=self.log_list.yview)
         scrollbar.pack(side="right", fill="y")
         self.log_list.pack(side="left", fill="both", expand=True)
+        Button(self.master, text="Limpar logs", command=self.clear_logs).pack()
+        Button(self.master, text="Limpar memória", command=self.clear_memory).pack()
+
+    def clear_logs(self):
+        self.log_list.delete(0, END)
+
+    def clear_memory(self):
+        self.memory_manager.clear_memory()
+        self.update_memory_display()
 
     def add_log(self, message):
         self.log_list.insert(END, message)
@@ -47,8 +55,7 @@ class MemorySimulatorGUI:
             if added:
                 showinfo("Successo!", f"Processo {process.id} adicionado com sucesso.")
             else:
-                pass
-                #self.add_log("Falha ao adicionar processo: Memória Insuficiente ou Page Fault")
+                self.add_log("Falha ao adicionar processo: Memória Insuficiente ou Page Fault")
             self.update_memory_display()
         except ValueError:
             showinfo("Erro", "Tamanho do processo inválido.")
