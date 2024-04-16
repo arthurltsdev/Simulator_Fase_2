@@ -4,7 +4,7 @@ class MemoryManager:
     def __init__(self, memorySize, pageSize):
         self.pageSize = pageSize
         self.memorySize = memorySize
-        self.pages = (self.memorySize + self.pageSize - 1) // self.pageSize  # Ensure proper rounding up
+        self.pages = (self.memorySize + self.pageSize - 1) // self.pageSize
         self.physicalMemory = [[None] * self.pageSize for _ in range(self.pages)]
         self.logicalMemory = {}
 
@@ -36,10 +36,18 @@ class MemoryManager:
         return frames
 
     def delete(self, process):
-        frames = self.logicalMemory.get(process.id, [])
-        for frame in frames:
-            start_index = frame.get_page_num()
-            end_index = start_index + self.pageSize
-            for j in range(start_index, end_index):
-                self.physicalMemory[j // self.pageSize][j % self.pageSize] = None
-        del self.logicalMemory[process.id]
+        if process.id in self.logicalMemory:
+            frames = self.logicalMemory[process.id]
+            for frame in frames:
+                start_index = frame.get_page_num() * self.pageSize
+                end_index = start_index + self.pageSize
+                # Garantindo que cada unidade dentro do frame seja removida
+                for j in range(start_index, end_index):
+                    page_index = j // self.pageSize
+                    sub_index = j % self.pageSize
+                    self.physicalMemory[page_index][sub_index] = None
+            # Remova a entrada do dicionário após limpar todos os frames
+            del self.logicalMemory[process.id]
+        else:
+            print(f"Process {process.id} not found in memory.")
+
