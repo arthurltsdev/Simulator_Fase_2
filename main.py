@@ -1,4 +1,4 @@
-from tkinter import Tk, Label, Button, Entry, StringVar, Frame
+from tkinter import Tk, Label, Button, Entry, StringVar, Frame, Listbox, END, Scrollbar, VERTICAL
 from tkinter.messagebox import showinfo
 from so.memory.memory_manager import MemoryManager
 from so.so_pack.process import Process
@@ -7,12 +7,26 @@ class MemorySimulatorGUI:
     def __init__(self, master):
         self.master = master
         self.master.title("Simulador de memória - Paginação")
-        #Inicializando o Memory Manager com uma memória de 256kb e cada página de tamanho 4kb.
-        self.memory_manager = MemoryManager(256, 4)
+        self.memory_manager = MemoryManager(256, 4, self)  # Memória de 256kb, página de 4kb
+        self.memory_manager.gui = self  # Passa a referência da GUI para o MemoryManager
 
         self.init_process_size_input()
         self.init_process_buttons()
         self.init_memory_display()
+        self.init_log_display()  # Inicializar a exibição de logs
+
+    def init_log_display(self):
+        self.log_frame = Frame(self.master)
+        self.log_frame.pack(fill="both", expand=True)
+        scrollbar = Scrollbar(self.log_frame, orient=VERTICAL)
+        self.log_list = Listbox(self.log_frame, height=10, width=50, yscrollcommand=scrollbar.set)
+        scrollbar.config(command=self.log_list.yview)
+        scrollbar.pack(side="right", fill="y")
+        self.log_list.pack(side="left", fill="both", expand=True)
+
+    def add_log(self, message):
+        self.log_list.insert(END, message)
+        self.log_list.see(END)  # Auto-scroll para o log mais recente
 
     def init_process_size_input(self):
         self.process_size_var = StringVar()
@@ -29,18 +43,25 @@ class MemorySimulatorGUI:
         try:
             size = int(self.process_size_var.get())
             process = Process(size)
-            self.memory_manager.write_using_paging(process)
-            showinfo("Successo!", f"Processo {process.id} adicionado com sucesso.")
+            added = self.memory_manager.write_using_paging(process)
+            if added:
+                showinfo("Successo!", f"Processo {process.id} adicionado com sucesso.")
+            else:
+                pass
+                #self.add_log("Falha ao adicionar processo: Memória Insuficiente ou Page Fault")
             self.update_memory_display()
         except ValueError:
             showinfo("Erro", "Tamanho do processo inválido.")
 
     def remove_process(self):
         process_id = self.remove_process_id_var.get().upper()
-        process = Process(0)  # Inicializa para deletar em seguida
+        process = Process(0)
         process.id = process_id
-        self.memory_manager.delete(process)
-        showinfo("Successo", f"Processo {process_id} removido com sucesso.")
+        removed = self.memory_manager.delete(process)
+        if removed:
+            showinfo("Successo", f"Processo {process_id} removido com sucesso.")
+        else:
+            self.add_log(f"Processo {process_id} não encontrado para remoção")
         self.update_memory_display()
 
     def init_memory_display(self):
