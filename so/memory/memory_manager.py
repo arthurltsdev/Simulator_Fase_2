@@ -7,7 +7,7 @@ class MemoryManager:
         self.pages = (self.memorySize + self.pageSize - 1) // self.pageSize
         self.physicalMemory = [[None] * self.pageSize for _ in range(self.pages)]
         self.logicalMemory = {}
-        self.gui = gui  # Referência da GUI para registrar logs
+        self.gui = gui
 
     def write_using_paging(self, process):
         frames = self.get_frames(process)
@@ -23,6 +23,9 @@ class MemoryManager:
                 sub_index = j % self.pageSize
                 self.physicalMemory[page_index][sub_index] = process.id
         self.logicalMemory[process.id] = frames
+        if all(frame[0] is not None for frame in self.physicalMemory):
+            if self.gui:
+                self.gui.add_log("Memória completamente cheia.")
         return True
 
     def get_frames(self, process):
@@ -53,3 +56,10 @@ class MemoryManager:
         if self.gui:
             self.gui.add_log(f"Processo {process.id} não encontrado.")
         return False
+
+    def clear_memory(self):
+        self.physicalMemory = [[None] * self.pageSize for _ in range(self.pages)]
+        self.logicalMemory = {}
+        if self.gui:
+            self.gui.add_log("Memória limpa completamente.")
+
