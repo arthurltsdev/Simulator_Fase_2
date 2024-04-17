@@ -2,13 +2,13 @@ from tkinter import Tk, Label, Button, Entry, StringVar, Frame, Listbox, END, Sc
 from tkinter.messagebox import showinfo
 from so.memory.memory_manager import MemoryManager
 from so.so_pack.process import Process
-
+from so.so_pack.subprocess import SubProcess
 class MemorySimulatorGUI:
     def __init__(self, master):
         self.master = master
         self.master.title("Simulador de memória - Paginação")
         # Memória de 256kb, página de 4kb
-        self.memory_manager = MemoryManager(256, 4, self)
+        self.memory_manager = MemoryManager(256, 1, self)
 
         self.init_process_size_input()
         self.init_process_buttons()
@@ -65,9 +65,7 @@ class MemorySimulatorGUI:
 
     def remove_process(self):
         process_id = self.remove_process_id_var.get().upper()
-        process = Process(0)
-        process.id = process_id
-        removed = self.memory_manager.delete(process)
+        removed = self.memory_manager.delete(process_id)  # Apenas passe o ID do processo
         if removed:
             showinfo("Successo", f"Processo {process_id} removido com sucesso.")
         else:
@@ -76,26 +74,24 @@ class MemorySimulatorGUI:
 
     def init_memory_display(self):
         self.memory_frame = Frame(self.master)
-        self.memory_frame.pack()
+        self.memory_frame.pack(expand=True, fill='both')
         self.memory_labels = []
-        # Para uma memória de 256kb e páginas de 4kb, o total de 64 páginas serão divididas 4 linhas de 16 colunas para melhor visualização.
-        columns = 16
-        for i in range(self.memory_manager.pages):
-            row = i // columns
-            column = i % columns
-            lbl = Label(self.memory_frame, text="", bg="white", width=2, height=1, borderwidth=1, relief="solid")
-            lbl.grid(row=row, column=column)
+        rows = 16
+        columns = 32  # Configuring for 256 frames in a 16x16 grid
+
+        for i in range(256):
+            lbl = Label(self.memory_frame, text="", bg="white", width=5, height=1, relief="solid")
+            lbl.grid(row=i // columns, column=i % columns, padx=1, pady=1)
             self.memory_labels.append(lbl)
-        self.update_memory_display()
 
     def update_memory_display(self):
         for i, lbl in enumerate(self.memory_labels):
-            page_index = i
-            page_content = [self.memory_manager.physicalMemory[page_index][sub_index] for sub_index in range(self.memory_manager.pageSize)]
-            if any(content is not None for content in page_content):
-                lbl.config(text=page_content[0], bg="green")
+            frame_content = self.memory_manager.physicalMemory[i][0]  # Assume que cada página pode conter 1 subprocesso
+            if frame_content:
+                lbl.config(text=frame_content.id, bg='green')
             else:
-                lbl.config(text="", bg="white")
+                lbl.config(text="", bg='white')
+
 
 if __name__ == "__main__":
     root = Tk()

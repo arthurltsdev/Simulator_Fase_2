@@ -1,8 +1,9 @@
 from so.memory.frame_memory import FrameMemory
 
+
 class MemoryManager:
     def __init__(self, memorySize, pageSize, gui=None):
-        self.pageSize = pageSize
+        self.pageSize = pageSize  # Cada página pode conter 1 subprocesso (assumindo que 1 unidade de tamanho é equivalente a 1 subprocesso)
         self.memorySize = memorySize
         self.pages = (self.memorySize + self.pageSize - 1) // self.pageSize
         self.physicalMemory = [[None] * self.pageSize for _ in range(self.pages)]
@@ -10,64 +11,53 @@ class MemoryManager:
         self.gui = gui
 
     def write_using_paging(self, process):
-        frames = self.get_frames(process)
+        sub_processes = process.get_sub_processes()
+        if not sub_processes:
+            if self.gui:
+                self.gui.add_log("Falha: Nenhum subprocesso para alocar.")
+            return False
+
+        frames = self.get_frames(len(sub_processes))
         if not frames:
             if self.gui:
                 self.gui.add_log("Page Fault: Não há memória disponível para alocar o processo.")
             return False
-        for frame in frames:
-            start_index = frame.get_page_num() * self.pageSize
-            end_index = start_index + self.pageSize
-            for j in range(start_index, end_index):
-                page_index = j // self.pageSize
-                sub_index = j % self.pageSize
-                self.physicalMemory[page_index][sub_index] = process.id
-        self.logicalMemory[process.id] = frames
-        # Calcula a memória restante para printar o log a cada novo processo adicionado
+
+        for frame, sp in zip(frames, sub_processes):
+            self.physicalMemory[frame.pageNum][0] = sp  # Alocando cada subprocesso em uma página
+            self.logicalMemory[sp.id] = frame
+
         remaining_pages = sum(1 for frame in self.physicalMemory if frame[0] is None)
         remaining_memory_kb = remaining_pages * self.pageSize
         if self.gui:
             self.gui.add_log(f"Espaço restante em memória: {remaining_memory_kb} kb.")
-        # Verifica se a memória está completamente cheia e loga se estiver
+
         if all(frame[0] is not None for frame in self.physicalMemory):
             if self.gui:
                 self.gui.add_log("Memória completamente cheia.")
-
         return True
 
-    def get_frames(self, process):
+    def get_frames(self, num_subprocesses):
         frames = []
-        actuallyProcessSize = 0
-        for frame in range(self.pages):
-            if self.physicalMemory[frame][0] is None:
-                frames.append(FrameMemory(frame, self.pageSize))
-                actuallyProcessSize += self.pageSize
-                if actuallyProcessSize >= process.sizeInMemory:
+        for i, frame in enumerate(self.physicalMemory):
+            if frame[0] is None:
+                frames.append(FrameMemory(i, 0))
+                if len(frames) == num_subprocesses:
                     return frames
-        if actuallyProcessSize < process.sizeInMemory:
-            # Retorna lista vazia se não houver espaço suficiente
-            return []
-        return frames
+        return []
 
-    def delete(self, process):
-        if process.id in self.logicalMemory:
-            frames = self.logicalMemory[process.id]
-            for frame in frames:
-                start_index = frame.get_page_num() * self.pageSize
-                end_index = start_index + self.pageSize
-                for j in range(start_index, end_index):
-                    page_index = j // self.pageSize
-                    sub_index = j % self.pageSize
-                    self.physicalMemory[page_index][sub_index] = None
-            del self.logicalMemory[process.id]
-            return True
-        if self.gui:
-            self.gui.add_log(f"Processo {process.id} não encontrado.")
-        return False
+    def delete(self, process_id):
+        # Removendo subprocessos da memória física baseado no process_id
+        removed = False
+        for page in self.physicalMemory:
+            for i, sp in enumerate(page):
+                if sp is not None and sp.id.startswith(process_id):
+                    page[i] = None  # Limpa o frame que contém o subprocesso
+                    removed = True
 
-    def clear_memory(self):
-        self.physicalMemory = [[None] * self.pageSize for _ in range(self.pages)]
-        self.logicalMemory = {}
-        if self.gui:
-            self.gui.add_log("Todos os processos foram removidos.")
+        if removed:
+            self.gui.add_log(f"Processo {process_id} removido com sucesso.")
+        else:
+            self.gui.add_log(f"Processo {process_id} não encontrado.")
+        return removed
 
