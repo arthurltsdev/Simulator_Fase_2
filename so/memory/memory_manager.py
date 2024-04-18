@@ -24,7 +24,7 @@ class MemoryManager:
             return False
 
         for frame, sp in zip(frames, sub_processes):
-            self.physicalMemory[frame.pageNum][0] = sp  # Alocando cada subprocesso em uma página
+            self.physicalMemory[frame.page_num][0] = sp  # Alocando cada subprocesso em uma página
             self.logicalMemory[sp.id] = frame
 
         remaining_pages = sum(1 for frame in self.physicalMemory if frame[0] is None)

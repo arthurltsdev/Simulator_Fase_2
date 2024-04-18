@@ -3,10 +3,11 @@ from so.so_pack.subprocess import SubProcess
 class Process:
     count = 0
 
-    def __init__(self, size):
+    def __init__(self, size, priority='Média'):
         Process.count += 1
         self.id = f"P{Process.count}"
         self.sizeInMemory = size
+        self.priority = priority
         self.subProcesses = self.create_sub_processes()
 
     def create_sub_processes(self):
